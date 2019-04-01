@@ -10,8 +10,8 @@ go:
 
 script:
 - go build .
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tar gdu-linux.tar.gz gdu; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tar gdu-osx.tar.gz gdu; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tar czvf gdu-linux.tar.gz gdu; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tar czvf gdu-osx.tar.gz gdu; fi
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then zip gdu-windows.zip gdu; fi
 
 deploy:
