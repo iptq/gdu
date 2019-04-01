@@ -47,9 +47,9 @@ func (n *TreeNode) GetName() string {
 }
 
 // Get retrieves the entry for a particular file
-func (n *TreeNode) Get(key string) (value Entry) {
+func (n *TreeNode) Get(key string) (value Entry, ok bool) {
 	n.mutex.RLock()
-	value = n.files[key]
+	value, ok = n.files[key]
 	n.mutex.RUnlock()
 	return
 }
