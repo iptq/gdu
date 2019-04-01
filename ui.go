@@ -4,6 +4,8 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+const PAGE_BY = 20
+
 type UI struct {
 	Table         Table
 	Events        chan termbox.Event
@@ -50,10 +52,16 @@ func (ui *UI) Run() (err error) {
 			case termbox.EventKey:
 				switch event.Key {
 				case termbox.KeyArrowUp:
-					ui.Table.MoveUp()
+					ui.Table.MoveUp(1)
 
 				case termbox.KeyArrowDown:
-					ui.Table.MoveDown()
+					ui.Table.MoveDown(1)
+
+				case termbox.KeyPgup:
+					ui.Table.MoveUp(PAGE_BY)
+
+				case termbox.KeyPgdn:
+					ui.Table.MoveDown(PAGE_BY)
 
 				case termbox.KeyEnter:
 					ui.SelectHandler(ui.Table.GetSelectedName())

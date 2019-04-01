@@ -13,6 +13,8 @@ import (
 )
 
 var err error
+
+var root gdu.TreeNode
 var current *gdu.TreeNode
 
 var poundMap = make(map[int]string)
@@ -30,16 +32,20 @@ func getPounds(i int) string {
 	return x
 }
 
-func load(ui *gdu.UI, root *gdu.TreeNode) {
+func load(ui *gdu.UI, node *gdu.TreeNode) {
 	ui.Table.Clear()
-	ui.Table.Path = root.Path
-	entries := root.GetEntries()
+	ui.Table.Path = node.Path
+	entries := node.GetEntries()
 
 	if len(entries) > 0 {
 		sort.Sort(entries)
 
 		// now entries[0] is guaranteed to be the largest
 		largest := entries[0].GetSize()
+
+		if current != &root {
+			ui.Table.AddRow("", "", "", "/..")
+		}
 
 		for _, entry := range entries {
 			size := entry.GetSize()
@@ -69,7 +75,7 @@ func main() {
 
 	open := make(chan bool, concurrent)
 
-	root := gdu.NewNode(".")
+	root = gdu.NewNode(".")
 	gdu.RecursiveCompute(open, &root, cwd)
 
 	// ui
@@ -79,10 +85,15 @@ func main() {
 	defer ui.Close()
 
 	ui.SelectHandler = func(selected string) {
-		entry, ok := current.Get(strings.TrimPrefix(selected, "/"))
-		if ok && entry.Kind() == "Directory" {
-			current = entry.(*gdu.TreeNode)
+		if selected == ".." {
+			current = current.Parent
 			load(&ui, current)
+		} else {
+			entry, ok := current.Get(strings.TrimPrefix(selected, "/"))
+			if ok && entry.Kind() == "Directory" {
+				current = entry.(*gdu.TreeNode)
+				load(&ui, current)
+			}
 		}
 	}
 

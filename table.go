@@ -2,6 +2,7 @@ package gdu
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/nsf/termbox-go"
 )
@@ -24,7 +25,8 @@ type Table struct {
 	Path        string
 	buffer      [][]string
 	selectedRow int
-	previousRow int
+	clearFrom   int
+	clearTo     int
 	view        int
 }
 
@@ -32,7 +34,8 @@ func MakeTable() Table {
 	return Table{
 		buffer:      make([][]string, 0),
 		selectedRow: 0,
-		previousRow: -1,
+		clearFrom:   int(math.MaxInt32),
+		clearTo:     int(math.MinInt32),
 		view:        0,
 	}
 }
@@ -57,27 +60,33 @@ func (t *Table) GetSelectedName() string {
 	return t.buffer[t.selectedRow][3]
 }
 
-func (t *Table) MoveUp() {
-	t.previousRow = t.selectedRow
-	if t.selectedRow > 0 {
-		t.selectedRow -= 1
+func (t *Table) MoveUp(by int) {
+	t.clearTo = t.selectedRow
+	t.selectedRow -= by
+	if t.selectedRow < 0 {
+		t.selectedRow = 0
 	}
+	t.clearFrom = t.selectedRow + 1
 
-	if t.selectedRow+2 < t.view+2 {
-		t.view--
+	if t.selectedRow < t.view {
+		t.view = t.selectedRow
 	}
 }
 
-func (t *Table) MoveDown() {
-	t.previousRow = t.selectedRow
-	if t.selectedRow < len(t.buffer)-1 {
-		t.selectedRow += 1
+func (t *Table) MoveDown(by int) {
+	t.clearFrom = t.selectedRow
+	t.selectedRow += by
+	if t.selectedRow > len(t.buffer)-1 {
+		t.selectedRow = len(t.buffer) - 1
 	}
+	t.clearTo = t.selectedRow - 1
 
 	_, height := termbox.Size()
+	_ = t.selectedRow - t.clearFrom
+
 	// adjust view window
-	if t.selectedRow+2 > t.view+height-2 {
-		t.view++
+	if t.selectedRow > t.view+height-4 {
+		t.view = t.selectedRow - height + 4
 	}
 }
 
@@ -146,7 +155,7 @@ func (t *Table) Draw() {
 		if highlighted {
 			printRow(i, t.buffer[r], columns, termbox.ColorBlack, termbox.ColorBlue, ' ', true)
 		} else {
-			printRow(i, t.buffer[r], columns, termbox.ColorWhite, termbox.ColorBlack, ' ', r == t.previousRow)
+			printRow(i, t.buffer[r], columns, termbox.ColorWhite, termbox.ColorBlack, ' ', r >= t.clearFrom && r <= t.clearTo)
 		}
 	}
 }
