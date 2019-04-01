@@ -5,6 +5,7 @@ import "sync"
 // TreeNode describes a single node in the output file tree
 type TreeNode struct {
 	Parent *TreeNode
+	Path   string
 	name   string
 	size   uint64
 	files  map[string]Entry
@@ -43,7 +44,7 @@ func (n *TreeNode) GetSize() (size uint64) {
 
 // GetName returns the name of the directory, appended with "/"
 func (n *TreeNode) GetName() string {
-	return n.name
+	return "/" + n.name
 }
 
 // Get retrieves the entry for a particular file

@@ -11,8 +11,6 @@ import (
 	"gdu"
 
 	"github.com/dustin/go-humanize"
-	"github.com/gdamore/tcell"
-	"github.com/rivo/tview"
 )
 
 var err error
@@ -33,29 +31,34 @@ func getPounds(i int) string {
 	return x
 }
 
-func load(table *tview.Table, root *gdu.TreeNode) {
-	table.Clear()
+func load(ui *gdu.UI, root *gdu.TreeNode) {
+	ui.Table.Clear()
+	ui.Table.Path = root.Path
 	entries := root.GetEntries()
+
 	if len(entries) > 0 {
 		sort.Sort(entries)
 
 		// now entries[0] is guaranteed to be the largest
 		largest := entries[0].GetSize()
 
-		for i, entry := range entries {
+		for _, entry := range entries {
 			size := entry.GetSize()
 			filling := int(size * 10 / largest)
 
 			filled := getPounds(filling)
 			notFilled := getPounds(filling - 10)
 
-			table.SetCell(i, 0, tview.NewTableCell(" "))
-			table.SetCell(i, 1, tview.NewTableCell(humanize.Bytes(size)).SetAlign(tview.AlignRight))
-			table.SetCell(i, 2, tview.NewTableCell("["+filled+notFilled+"]"))
-			table.SetCell(i, 3, tview.NewTableCell(entry.GetName()))
+			ui.Table.AddRow(" ",
+				humanize.Bytes(size),
+				"["+filled+notFilled+"]",
+				entry.GetName(),
+			)
 		}
-		table.Select(0, 0)
+
+		ui.Table.Select(0)
 	}
+	ui.Redraw <- 0
 }
 
 func main() {
@@ -70,41 +73,59 @@ func main() {
 	open := make(chan bool, concurrent)
 
 	root := gdu.NewNode(".")
-	fmt.Println("waiting...")
+	fmt.Println("Waiting...")
 	gdu.RecursiveCompute(open, &root, cwd)
+	fmt.Println("Done computing")
 
 	// ui
 
-	app := tview.NewApplication()
-
-	current = &root
-	table := tview.NewTable().
-		SetSelectable(true, false).
-		SetSeparator(' ')
-	load(table, &root)
-
-	table.Select(0, 0).SetFixed(1, 1).SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEscape {
-			if current == &root {
-				app.Stop()
-			} else {
-				current = current.Parent
-				load(table, current)
-			}
-		}
-	}).SetSelectedFunc(func(r, c int) {
-		cell := table.GetCell(r, c)
-		name := cell.Text
-
-		entry, ok := current.Get(name)
-		if ok && entry.Kind() == "Directory" {
-			current = entry.(*gdu.TreeNode)
-			load(table, current)
-		}
-	})
-	if err := app.SetRoot(table, true).
-		SetFocus(table).
-		Run(); err != nil {
-		panic(err)
+	ui := gdu.NewUI()
+	ui.SelectHandler = func(row int) {
+		fmt.Println(row)
 	}
+
+	done := make(chan int)
+	go func() {
+		err = ui.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		done <- 0
+	}()
+	load(&ui, &root)
+	<-done
+	os.Exit(0)
+
+	// app := tview.NewApplication()
+
+	// current = &root
+	// table := tview.NewTable().
+	// 	SetSelectable(true, false).
+	// 	SetSeparator(' ')
+	// load(table, &root)
+
+	// table.Select(0, 0).SetFixed(1, 1).SetDoneFunc(func(key tcell.Key) {
+	// 	if key == tcell.KeyEscape {
+	// 		if current == &root {
+	// 			app.Stop()
+	// 		} else {
+	// 			current = current.Parent
+	// 			load(table, current)
+	// 		}
+	// 	}
+	// }).SetSelectedFunc(func(r, c int) {
+	// 	cell := table.GetCell(r, c)
+	// 	name := cell.Text
+
+	// 	entry, ok := current.Get(name)
+	// 	if ok && entry.Kind() == "Directory" {
+	// 		current = entry.(*gdu.TreeNode)
+	// 		load(table, current)
+	// 	}
+	// })
+	// if err := app.SetRoot(table, true).
+	// 	SetFocus(table).
+	// 	Run(); err != nil {
+	// 	panic(err)
+	// }
 }

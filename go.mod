@@ -15,6 +15,7 @@ require (
 	github.com/limetext/util v0.0.0-20160325174435-20e1a4a3505f // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.1 // indirect
 	github.com/mattn/go-colorable v0.1.1 // indirect
+	github.com/nsf/termbox-go v0.0.0-20190121233118-02980233997d
 	github.com/revel/config v0.21.0 // indirect
 	github.com/revel/log15 v2.11.20+incompatible // indirect
 	github.com/revel/modules v0.21.0 // indirect

@@ -46,7 +46,7 @@ func (n *FileEntry) GetSize() uint64 {
 
 // GetName returns the name of the file
 func (n *FileEntry) GetName() string {
-	return n.name
+	return " " + n.name
 }
 
 // NewFileEntry is the constructor for a FileEntry
