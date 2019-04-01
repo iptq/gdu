@@ -62,12 +62,22 @@ func (t *Table) MoveUp() {
 	if t.selectedRow > 0 {
 		t.selectedRow -= 1
 	}
+
+	if t.selectedRow+2 < t.view+2 {
+		t.view--
+	}
 }
 
 func (t *Table) MoveDown() {
 	t.previousRow = t.selectedRow
 	if t.selectedRow < len(t.buffer)-1 {
 		t.selectedRow += 1
+	}
+
+	_, height := termbox.Size()
+	// adjust view window
+	if t.selectedRow+2 > t.view+height-2 {
+		t.view++
 	}
 }
 
@@ -130,12 +140,13 @@ func (t *Table) Draw() {
 		}
 	}
 
-	for i := t.view; i < min(len(t.buffer), t.view+height-2); i++ {
-		highlighted := i == t.selectedRow
+	for i := 2; i < min(2+len(t.buffer), height-1); i++ {
+		r := i + t.view - 2
+		highlighted := r == t.selectedRow
 		if highlighted {
-			printRow(i+2, t.buffer[i], columns, termbox.ColorBlack, termbox.ColorBlue, ' ', true)
+			printRow(i, t.buffer[r], columns, termbox.ColorBlack, termbox.ColorBlue, ' ', true)
 		} else {
-			printRow(i+2, t.buffer[i], columns, termbox.ColorWhite, termbox.ColorBlack, ' ', i == t.previousRow)
+			printRow(i, t.buffer[r], columns, termbox.ColorWhite, termbox.ColorBlack, ' ', r == t.previousRow)
 		}
 	}
 }
