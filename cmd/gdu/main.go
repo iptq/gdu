@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -55,10 +54,8 @@ func load(ui *gdu.UI, root *gdu.TreeNode) {
 				entry.GetName(),
 			)
 		}
-
 		ui.Table.Select(0)
 	}
-	ui.Redraw <- 0
 }
 
 func main() {
@@ -73,59 +70,40 @@ func main() {
 	open := make(chan bool, concurrent)
 
 	root := gdu.NewNode(".")
-	fmt.Println("Waiting...")
 	gdu.RecursiveCompute(open, &root, cwd)
-	fmt.Println("Done computing")
 
 	// ui
 
 	ui := gdu.NewUI()
-	ui.SelectHandler = func(row int) {
-		fmt.Println(row)
+	done := make(chan int)
+	defer ui.Close()
+
+	ui.SelectHandler = func(selected string) {
+		entry, ok := current.Get(strings.TrimPrefix(selected, "/"))
+		if ok && entry.Kind() == "Directory" {
+			current = entry.(*gdu.TreeNode)
+			load(&ui, current)
+		}
 	}
 
-	done := make(chan int)
+	ui.EscHandler = func() {
+		if current == &root {
+			done <- 1
+		} else {
+			current = current.Parent
+			load(&ui, current)
+		}
+	}
+
 	go func() {
 		err = ui.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
-		done <- 0
+		done <- 1
 	}()
-	load(&ui, &root)
+
+	current = &root
+	load(&ui, current)
 	<-done
-	os.Exit(0)
-
-	// app := tview.NewApplication()
-
-	// current = &root
-	// table := tview.NewTable().
-	// 	SetSelectable(true, false).
-	// 	SetSeparator(' ')
-	// load(table, &root)
-
-	// table.Select(0, 0).SetFixed(1, 1).SetDoneFunc(func(key tcell.Key) {
-	// 	if key == tcell.KeyEscape {
-	// 		if current == &root {
-	// 			app.Stop()
-	// 		} else {
-	// 			current = current.Parent
-	// 			load(table, current)
-	// 		}
-	// 	}
-	// }).SetSelectedFunc(func(r, c int) {
-	// 	cell := table.GetCell(r, c)
-	// 	name := cell.Text
-
-	// 	entry, ok := current.Get(name)
-	// 	if ok && entry.Kind() == "Directory" {
-	// 		current = entry.(*gdu.TreeNode)
-	// 		load(table, current)
-	// 	}
-	// })
-	// if err := app.SetRoot(table, true).
-	// 	SetFocus(table).
-	// 	Run(); err != nil {
-	// 	panic(err)
-	// }
 }

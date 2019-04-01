@@ -8,7 +8,8 @@ type UI struct {
 	Table         Table
 	Events        chan termbox.Event
 	Redraw        chan int
-	SelectHandler func(int)
+	EscHandler    func()
+	SelectHandler func(string)
 }
 
 func NewUI() UI {
@@ -19,25 +20,28 @@ func NewUI() UI {
 	}
 }
 
-func (ui UI) eventLoop() {
+func (ui *UI) eventLoop() {
 	for {
 		event := termbox.PollEvent()
 		ui.Events <- event
 	}
 }
 
-func (ui UI) Run() (err error) {
+func (ui *UI) Close() {
+	termbox.Close()
+}
+
+func (ui *UI) Run() (err error) {
 	err = termbox.Init()
 	if err != nil {
 		return
 	}
-	defer termbox.Close()
 
 	go ui.eventLoop()
 
+	termbox.SetCursor(-1, -1)
 	for {
 		ui.Table.Draw()
-		termbox.SetCursor(-1, -1)
 		termbox.Flush()
 
 		select {
@@ -45,13 +49,24 @@ func (ui UI) Run() (err error) {
 			switch event.Type {
 			case termbox.EventKey:
 				switch event.Key {
+				case termbox.KeyArrowUp:
+					ui.Table.MoveUp()
+
 				case termbox.KeyArrowDown:
 					ui.Table.MoveDown()
+
+				case termbox.KeyEnter:
+					ui.SelectHandler(ui.Table.GetSelectedName())
+
+				case termbox.KeyEsc:
+					ui.EscHandler()
+
 				case termbox.KeyCtrlC:
 					return
 				}
 			}
 		case _ = <-ui.Redraw:
+			break
 		}
 	}
 }
