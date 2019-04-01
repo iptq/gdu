@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -19,7 +20,7 @@ var current *gdu.TreeNode
 func load(table *tview.Table, root *gdu.TreeNode) {
 	table.Clear()
 	entries := root.GetEntries()
-	sort.Sort(sort.Reverse(entries))
+	sort.Sort(entries)
 	for i, entry := range entries {
 		table.SetCell(i, 0,
 			tview.NewTableCell(entry.GetName()))
@@ -30,14 +31,20 @@ func load(table *tview.Table, root *gdu.TreeNode) {
 }
 
 func main() {
+	var concurrent int
+	flag.IntVar(&concurrent, "c", 940, "number of concurrent workers")
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	open := make(chan bool, concurrent)
+
 	root := gdu.NewNode(".")
-	gdu.RecursiveCompute(&root, cwd)
 	fmt.Println("waiting...")
+	gdu.RecursiveCompute(open, &root, cwd)
+	// os.Exit(0)
 
 	// ui
 

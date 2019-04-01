@@ -1,6 +1,7 @@
 package gdu
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -9,21 +10,24 @@ import (
 
 // RecursiveCompute is the main function, it recurses into directories
 // and builds up the tree of files
-func RecursiveCompute(node *TreeNode, searchPath string) (err error) {
+func RecursiveCompute(c chan bool, node *TreeNode, searchPath string) (err error) {
+	c <- true
 	listing, err := ioutil.ReadDir(searchPath)
+	<-c
 	if err != nil {
+		fmt.Println(searchPath, err)
 		return
 	}
 
 	var wg sync.WaitGroup
-	for _, file := range listing {
+	for _, info := range listing {
 		wg.Add(1)
-
 		go func(info os.FileInfo) {
 			if info.IsDir() {
 				dir := NewNode(info.Name() + "/")
 				dir.Parent = node
-				go RecursiveCompute(&dir, path.Join(searchPath, info.Name()))
+				sub := path.Join(searchPath, info.Name())
+				RecursiveCompute(c, &dir, sub)
 				node.Insert(info.Name()+"/", &dir)
 				node.AddSize(dir.GetSize())
 			} else {
@@ -32,7 +36,7 @@ func RecursiveCompute(node *TreeNode, searchPath string) (err error) {
 				node.AddSize(fileEntry.GetSize())
 			}
 			wg.Done()
-		}(file)
+		}(info)
 	}
 
 	wg.Wait()
