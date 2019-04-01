@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+// RecursiveCompute is the main function, it recurses into directories
+// and builds up the tree of files
 func RecursiveCompute(node *TreeNode, searchPath string) (err error) {
 	listing, err := ioutil.ReadDir(searchPath)
 	if err != nil {
