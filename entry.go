@@ -1,4 +1,4 @@
-package gdu
+package main
 
 // Entry describes any entry in the final output table
 type Entry interface {
@@ -19,13 +19,12 @@ func (e Entries) Swap(i, j int) {
 }
 
 func (e Entries) Less(i, j int) bool {
-	if e[i].Kind() == "Directory" && e[j].Kind() == "File" {
-		return true
-	} else if e[i].Kind() == "File" && e[j].Kind() == "Directory" {
-		return false
-	} else {
-		return e[i].GetSize() > e[j].GetSize()
-	}
+	// if e[i].Kind() == "Directory" && e[j].Kind() == "File" {
+	// 	return true
+	// } else if e[i].Kind() == "File" && e[j].Kind() == "Directory" {
+	// 	return false
+	// }
+	return e[i].GetSize() > e[j].GetSize()
 }
 
 // FileEntry describes a regular file in the final output

@@ -2,20 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"sort"
 	"strings"
-
-	"gdu"
 
 	"github.com/dustin/go-humanize"
 )
 
 var err error
 
-var root gdu.TreeNode
-var current *gdu.TreeNode
+var root TreeNode
+var current *TreeNode
 
 var poundMap = make(map[int]string)
 
@@ -32,7 +31,7 @@ func getPounds(i int) string {
 	return x
 }
 
-func load(ui *gdu.UI, node *gdu.TreeNode) {
+func load(ui *UI, node *TreeNode) {
 	ui.Table.Clear()
 	ui.Table.Path = node.Path
 	entries := node.GetEntries()
@@ -42,6 +41,11 @@ func load(ui *gdu.UI, node *gdu.TreeNode) {
 
 		// now entries[0] is guaranteed to be the largest
 		largest := entries[0].GetSize()
+
+		fmt.Println("largest", largest)
+		for _, entry := range entries {
+			fmt.Println(entry.GetName(), entry.GetSize())
+		}
 
 		if current != &root {
 			ui.Table.AddRow("", "", "", "/..")
@@ -75,12 +79,12 @@ func main() {
 
 	open := make(chan bool, concurrent)
 
-	root = gdu.NewNode(".")
-	gdu.RecursiveCompute(open, &root, cwd)
+	root = NewNode(".")
+	RecursiveCompute(open, &root, cwd)
 
 	// ui
 
-	ui := gdu.NewUI()
+	ui := NewUI()
 	done := make(chan int)
 	defer ui.Close()
 
@@ -91,7 +95,7 @@ func main() {
 		} else {
 			entry, ok := current.Get(strings.TrimPrefix(selected, "/"))
 			if ok && entry.Kind() == "Directory" {
-				current = entry.(*gdu.TreeNode)
+				current = entry.(*TreeNode)
 				load(&ui, current)
 			}
 		}

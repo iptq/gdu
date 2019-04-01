@@ -1,4 +1,4 @@
-package gdu
+package main
 
 import (
 	"fmt"
