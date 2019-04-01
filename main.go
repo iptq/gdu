@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -42,11 +42,6 @@ func load(ui *UI, node *TreeNode) {
 		// now entries[0] is guaranteed to be the largest
 		largest := entries[0].GetSize()
 
-		fmt.Println("largest", largest)
-		for _, entry := range entries {
-			fmt.Println(entry.GetName(), entry.GetSize())
-		}
-
 		if current != &root {
 			ui.Table.AddRow("", "", "", "/..")
 		}
@@ -70,7 +65,13 @@ func load(ui *UI, node *TreeNode) {
 
 func main() {
 	var concurrent int
-	flag.IntVar(&concurrent, "c", 940, "number of concurrent workers")
+	var threads int
+
+	flag.IntVar(&concurrent, "c", 256, "number of concurrent workers")
+	flag.IntVar(&threads, "t", 4, "number of threads on which to spawn goroutines")
+	flag.Parse()
+
+	runtime.GOMAXPROCS(threads)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -89,11 +90,12 @@ func main() {
 	defer ui.Close()
 
 	ui.SelectHandler = func(selected string) {
+		selected = strings.TrimPrefix(selected, "/")
 		if selected == ".." {
 			current = current.Parent
 			load(&ui, current)
 		} else {
-			entry, ok := current.Get(strings.TrimPrefix(selected, "/"))
+			entry, ok := current.Get(selected)
 			if ok && entry.Kind() == "Directory" {
 				current = entry.(*TreeNode)
 				load(&ui, current)

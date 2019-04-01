@@ -12,12 +12,13 @@ import (
 // and builds up the tree of files
 func RecursiveCompute(c chan bool, node *TreeNode, searchPath string) (err error) {
 	node.Path = searchPath
+	fmt.Printf("\r...%s", searchPath[max(0, len(searchPath)-60):])
 
 	c <- true
 	listing, err := ioutil.ReadDir(searchPath)
 	<-c
 	if err != nil {
-		fmt.Println(searchPath, err)
+		// fmt.Println(searchPath, err)
 		return
 	}
 
