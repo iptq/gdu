@@ -66,25 +66,26 @@ func load(ui *UI, node *TreeNode) {
 func main() {
 	var concurrent int
 	var threads int
-
-	flag.IntVar(&concurrent, "c", 256, "number of concurrent workers")
-	flag.IntVar(&threads, "t", 4, "number of threads on which to spawn goroutines")
-	flag.Parse()
-
-	runtime.GOMAXPROCS(threads)
+	var rootPath string
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	flag.IntVar(&concurrent, "c", 256, "number of concurrent workers")
+	flag.IntVar(&threads, "t", 4, "number of threads on which to spawn goroutines")
+	flag.StringVar(&rootPath, "p", cwd, "path to start in")
+	flag.Parse()
+
+	runtime.GOMAXPROCS(threads)
+
 	open := make(chan bool, concurrent)
 
 	root = NewNode(".")
-	RecursiveCompute(open, &root, cwd)
+	RecursiveCompute(open, &root, rootPath)
 
 	// ui
-
 	ui := NewUI()
 	done := make(chan int)
 	defer ui.Close()

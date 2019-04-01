@@ -1,0 +1,15 @@
+language: go
+
+go:
+- 1.11.x
+
+deploy:
+  provider: releases
+  api_key:
+    secure: wgRZ9wN41FuKmY6dw3SedIhBxz4P2H//pXhp3wDclqA1DQ57iOazw0KQa3XzvKwMV2kzd6FxAToWY2JrT3jNPV8jBIsogZ50t9H/JidFTkjaCt230cxZZq8jcy9b/oqQpfFkVruTzZzFf4fC9nKKh9y1zpYpzBJJb6XDyx5UaQZEk6b9kjpvIm8CASb6RVOGhW81ZR9+/lg+JSpQKAZwt1mFOE9sHQrVmnQ5qQagLUhhoEeW5fYQajWaasNC/Vrwa4dzQFCKotHE+2xcUQebrkZlu5jlSHwWp0knTHidhpi/qhSFtbQxB4A/0SMlXOwzh2ImG8GPIovQbOgDhiVDc5S0cwXcs/a3VNLQmO8Cc/vTK3Cs96FCt1/AW4ucWuV8wOUOWaVVL20ooUfGiZGLZmBftIfFUIZ/FkoCc6RUDKlinBy4qr5uSTy39o/fcBb10jBJZuFeZham+iP1uJeEDmQBZrRf5pKLFl0QUC9xSaQlLhkdBN7pTAJBtWKQxkQTBNVIrKUiTYbjjSVxh+2iBU9Kt5BJjZhNABNMgJRkOLpLGxslZuTcLJknFfZ4D5icmrDL/WC0wCEl/b1IVnwz7KfLcWe8bcSqcLkF0H0IGd8jTOxlaPvINqWLFelNJ6ISNWTRCbjX580B7AnOuypbFf3O2YJdpBGddfXMEtuSqsM=
+  file_glob: true
+  file: gdu-*.tar.gz
+  skip_cleanup: true
+  on:
+    repo: iptq/gdu
+    tags: true
